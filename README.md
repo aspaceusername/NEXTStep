@@ -1,4 +1,3 @@
-Platform with online personal trainers in mind
 # NEXTStep
 Originally i was going to build a React+Express+MongoDB app called NEXTStep, but I decided to switch to upSTEP (though i might keep the old name, it looks better)
 # upSTEP
