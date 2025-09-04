@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+
+{% block title %}Fitness Assessment Questionnaire{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    .container {
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+    .questionnaire-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 40px;
+        margin: 20px auto;
+        max-width: 800px;
+    }
+    .section-header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin: 30px 0 20px 0;
+        font-weight: bold;
+    }
+
+    .questionnaire-container .form-control,
+    .questionnaire-container .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 25px;
+        padding: 15px 40px;
+        font-weight: bold;
+        transition: transform 0.3s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #5a6fd8, #6a42a0);
+    }
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        border-radius: 25px;
+        padding: 15px 40px;
+        font-weight: bold;
+        transition: transform 0.3s ease;
+    }
+    .progress-bar {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    /* Step animations */
+    .form-step {
+        display: none;
+        animation: fadeIn 0.5s ease-in;
+    }
+    .form-step.active {
+        display: block;
+    }
+    .form-step.fade-out {
+        animation: fadeOut 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(-30px); }
+    }
+
+    .step-counter {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 10px 20px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: bold;
+        color: #667eea;
+    }
+</style>
+
+<div class="container">
+    <div class="questionnaire-container">
+        <div class="text-center mb-4">
+            <h1 class="display-4 fw-bold" style="color: #667eea;">Fitness Assessment</h1>
+            <p class="lead text-muted">Help us create your personalized workout plan</p>
+        </div>
+
+        <div class="step-counter">
+            Step <span id="currentStep">1</span> of <span id="totalSteps">6</span>
+        </div>
+
+        <div class="progress mb-4">
+            <div class="progress-bar" role="progressbar" style="width: 16.67%" id="progressBar">16%</div>
+        </div>
+
+        <form id="fitnessForm" method="POST" action="/submit-questionnaire">
+
+            <!-- Step 1: Personal Information -->
+            <div class="form-step active" data-step="1">
+                <div class="section-header">
+                    <i class="fas fa-user"></i> Personal Information
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Full Name *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Email *</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Age *</label>
+                        <input type="number" class="form-control" name="age" min="16" max="80" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Gender *</label>
+                        <select class="form-select" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Prefer not to say</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Phone</label>
+                        <input type="tel" class="form-control" name="phone">
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Physical Metrics -->
+            <div class="form-step" data-step="2">
+                <div class="section-header">
+                    <i class="fas fa-weight"></i> Physical Metrics
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Height (cm) *</label>
+                        <input type="number" class="form-control" name="height" min="140" max="220" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Weight (kg) *</label>
+                        <input type="number" class="form-control" name="weight" min="40" max="200" step="0.1" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Target Weight (kg)</label>
+                        <input type="number" class="form-control" name="target_weight" min="40" max="200" step="0.1">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Fitness Goals -->
+            <div class="form-step" data-step="3">
+                <div class="section-header">
+                    <i class="fas fa-target"></i> Fitness Goals
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Primary Goal *</label>
+                    <select class="form-select" name="primary_goal" required>
+                        <option value="">Select your main goal</option>
+                        <option value="weight_loss">Weight Loss</option>
+                        <option value="muscle_gain">Muscle Gain</option>
+                        <option value="strength">Increase Strength</option>
+                        <option value="endurance">Improve Endurance</option>
+                        <option value="general_fitness">General Fitness</option>
+                        <option value="sport_specific">Sport-Specific Training</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Secondary Goals (select all that apply)</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="secondary_goals" value="flexibility" id="flexibility">
+                                <label class="form-check-label" for="flexibility">Improve Flexibility</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="secondary_goals" value="balance" id="balance">
+                                <label class="form-check-label" for="balance">Better Balance</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="secondary_goals" value="posture" id="posture">
+                                <label class="form-check-label" for="posture">Improve Posture</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="secondary_goals" value="energy" id="energy">
+                                <label class="form-check-label" for="energy">Increase Energy</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="secondary_goals" value="stress_relief" id="stress">
+                                <label class="form-check-label" for="stress">Stress Relief</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="secondary_goals" value="sleep" id="sleep">
+                                <label class="form-check-label" for="sleep">Better Sleep</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Current Activity Level -->
+            <div class="form-step" data-step="4">
+                <div class="section-header">
+                    <i class="fas fa-running"></i> Current Activity Level
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Current Fitness Level *</label>
+                    <select class="form-select" name="fitness_level" required>
+                        <option value="">Select your level</option>
+                        <option value="beginner">Beginner (No regular exercise)</option>
+                        <option value="intermediate">Intermediate (Exercise 1-3 times/week)</option>
+                        <option value="advanced">Advanced (Exercise 4+ times/week)</option>
+                        <option value="athlete">Athlete (Daily training)</option>
+                    </select>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Days per week you can workout *</label>
+                        <select class="form-select" name="workout_days" required>
+                            <option value="">Select days</option>
+                            <option value="2">2 days</option>
+                            <option value="3">3 days</option>
+                            <option value="4">4 days</option>
+                            <option value="5">5 days</option>
+                            <option value="6">6 days</option>
+                            <option value="7">7 days</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Time per session *</label>
+                        <select class="form-select" name="session_duration" required>
+                            <option value="">Select duration</option>
+                            <option value="30">30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">60 minutes</option>
+                            <option value="90">90 minutes</option>
+                            <option value="120">2+ hours</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Exercise Preferences -->
+            <div class="form-step" data-step="5">
+                <div class="section-header">
+                    <i class="fas fa-heart"></i> Exercise Preferences
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Preferred Workout Types (select all that apply)</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workout_types" value="weight_training" id="weights">
+                                <label class="form-check-label" for="weights">Weight Training</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workout_types" value="cardio" id="cardio">
+                                <label class="form-check-label" for="cardio">Cardio</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workout_types" value="bodyweight" id="bodyweight">
+                                <label class="form-check-label" for="bodyweight">Bodyweight Exercises</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workout_types" value="yoga" id="yoga">
+                                <label class="form-check-label" for="yoga">Yoga/Pilates</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workout_types" value="swimming" id="swimming">
+                                <label class="form-check-label" for="swimming">Swimming</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workout_types" value="running" id="running">
+                                <label class="form-check-label" for="running">Running/Cycling</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workout_types" value="sports" id="sports">
+                                <label class="form-check-label" for="sports">Team Sports</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workout_types" value="hiit" id="hiit">
+                                <label class="form-check-label" for="hiit">HIIT Training</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Available Equipment *</label>
+                    <select class="form-select" name="equipment" required>
+                        <option value="">Select equipment access</option>
+                        <option value="full_gym">Full Gym Access</option>
+                        <option value="home_gym">Home Gym Setup</option>
+                        <option value="basic_equipment">Basic Equipment (dumbbells, resistance bands)</option>
+                        <option value="bodyweight_only">Bodyweight Only</option>
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Health & Additional Info -->
+            <div class="form-step" data-step="6">
+                <div class="section-header">
+                    <i class="fas fa-medkit"></i> Health & Additional Information
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Current Health Status *</label>
+                    <select class="form-select" name="health_status" required>
+                        <option value="">Select status</option>
+                        <option value="excellent">Excellent - No health issues</option>
+                        <option value="good">Good - Minor issues managed</option>
+                        <option value="fair">Fair - Some health concerns</option>
+                        <option value="medical_supervision">Under medical supervision</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Injuries or Physical Limitations</label>
+                    <textarea class="form-control" name="limitations" rows="3" placeholder="Please describe any injuries, surgeries, or physical limitations we should consider..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="medical_clearance" id="medical" required>
+                        <label class="form-check-label fw-bold" for="medical">
+                            I confirm that I am physically able to participate in exercise activities *
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">What motivates you most?</label>
+                    <select class="form-select" name="motivation">
+                        <option value="">Select motivation</option>
+                        <option value="health">Health & Wellness</option>
+                        <option value="appearance">Physical Appearance</option>
+                        <option value="performance">Athletic Performance</option>
+                        <option value="energy">More Energy</option>
+                        <option value="social">Social Aspects</option>
+                        <option value="challenge">Personal Challenge</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Additional Comments or Specific Requests</label>
+                    <textarea class="form-control" name="comments" rows="4" placeholder="Tell us anything else that would help us create your perfect workout plan..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Generate My Workout Plan
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+<script src="{{ url_for('static', filename='js/questionnaire.js') }}"></script>
+{% endblock %}
